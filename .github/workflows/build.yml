@@ -20,6 +20,9 @@ on:
       environment:
         required: true
         type: string
+      temp:
+        required: true
+        type: string
 
     secrets:
       aws_access_key_id:
