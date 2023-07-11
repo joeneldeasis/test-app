@@ -8,7 +8,7 @@ on:
     branches:
       - main
     inputs:
-      aws_region:
+      aws-region:
         required: true
         type: string
       branch:
