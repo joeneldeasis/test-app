@@ -1,7 +1,12 @@
 name: Build UI
 
 on:
-  # workflow_call:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
     inputs:
       aws_region:
         required: true
@@ -22,36 +27,32 @@ on:
       aws_secret_access_key:
         required: true
 
-
 jobs:
   build:
     name: Pull Repository & Build
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: ${{ inputs.environment }}
     steps:
-    - uses: actions/checkout@v2
-    
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.aws_access_key_id }}
-        aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
-        aws-region: ${{ inputs.aws_region }}
-    
-    - name: Build UI
-      id: build-ui
-      run: npm run build
+      - name: Checkout to the repository
+        uses: actions/checkout@v2
 
-    - name: Upload to S3
-      id: upload-s3
-      # run: aws s3 sync build/* prod-${{ bucket }}
-      run: aws s3 cp build/ s3://prod-${{ bucket }} --recursive
+      - name: Set up NodeJS environment
+        uses: actions/setup-node@v2
+        with:
+          node-version-file: '.nvmrc'
 
-      # run: |
-      #   docker build -f ${{ inputs.dockerfile }} -t $TAG_LATEST -t $TAG_VERSION --target ${{ inputs.target }} . \
-      #   --build-arg ENVS=${{ secrets.envs }}
-        
-      #   docker push $TAG_LATEST
-      #   docker push $TAG_VERSION
-      #   echo "::set-output name=image::$TAG_VERSION"
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.aws_access_key_id }}
+          aws-secret-access-key: ${{ secrets.aws_secret_access_key }}
+          aws-region: ${{ inputs.aws_region }}
+
+      - name: Build UI
+        id: build-ui
+        run: npm run build
+
+      - name: Upload to S3
+        id: upload-s3
+        run: aws s3 cp build/ s3://prod-${{ bucket }} --recursive
