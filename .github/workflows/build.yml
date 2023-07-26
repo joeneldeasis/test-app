@@ -20,7 +20,7 @@ on:
       environment:
         required: true
         type: string
-      temp:
+      distribution-id:
         required: true
         type: string
 
@@ -28,7 +28,9 @@ on:
       aws_access_key_id:
         required: true
       aws_secret_access_key:
-        required: true
+        requ]ired: true
+      distribution_id:
+          required: true
 
 jobs:
   build:
@@ -62,4 +64,9 @@ jobs:
 
       - name: Upload to S3
         id: upload-s3
-        run: aws s3 cp build/ s3://prod-my-app --recursive
+        run: aws s3 cp build/ s3://lanaya.ryjin.net --recursive
+
+      - name: Invalidate Cloudfront
+        id: invalidate-cloudfront
+        run: aws cloudfront create-invalidation --distribution-id "E12I1ABPRLXVU"
+
