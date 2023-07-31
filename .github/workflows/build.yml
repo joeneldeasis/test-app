@@ -59,12 +59,12 @@ jobs:
         id: install-dependencies
         run: npm install
 
-      - name: s
-        id: build-ui
+      - name: Build Project
+        id: build-project
         run: npm run build
 
       - name: Upload to bucket ${{ inputs.bucket_name }}
-        id: upload-s3
+        id: upload-files
         run: aws s3 cp build/ s3://prod-${{ inputs.bucket_name }} --recursive
 
       - name: Invalidate Cloudfront
