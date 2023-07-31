@@ -38,7 +38,7 @@ jobs:
         run: cd build && zip -r ../${{ github.event.repository.name }}-${{ github.sha }}.zip *
 
       - name: Uploading build files
-        run: aws s3 cp ${{ github.event.repository.name }}-${{ github.sha }}.zip s3://prod-${{ vars.BUCKET_NAME }}/builds
+        run: aws s3 cp ${{ github.event.repository.name }}-${{ github.sha }}.zip s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.sha }}.zip
 
       # - name: Upload to bucket ${{ vars.BUCKET_NAME }}
       #   run: aws s3 cp build/ s3://prod-${{ vars.BUCKET_NAME }} --recursive
