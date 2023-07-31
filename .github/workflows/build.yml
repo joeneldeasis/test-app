@@ -18,6 +18,8 @@ jobs:
 
       - name: Set up NodeJS environment
         uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
