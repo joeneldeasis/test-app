@@ -17,6 +17,9 @@ jobs:
       - name: Checkout to the repository
         uses: actions/checkout@v2
 
+      - name: SADAhlhlkjh
+        run: echo ${{ vars.BUCKET }}
+
       - name: Set up NodeJS environment
         uses: actions/setup-node@v2
         with:
@@ -34,8 +37,7 @@ jobs:
         # run: npm install
         run: echo $PROJECT_NAME
 
-      - name: SADAhlhlkjh
-        run: echo ${{ vars.BUCKET }}
+
 
       - name: Build Project
         id: build-project
