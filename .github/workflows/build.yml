@@ -1,7 +1,4 @@
-name: Project Deployment
-env:
-  # Setting an environment variable with the value of a configuration variable
-  env_var: ${{ vars.ENV_CONTEXT_VAR }}
+name: Project Deploymenta
 on:
   push:
     branches:
@@ -9,41 +6,17 @@ on:
   pull_request:
     branches:
       - main
-    inputs:
-      aws_region:
-        required: true
-        type: string
-      branch:
-        required: true
-        type: string
-      bucket:
-        required: true
-        type: string
-      environment:
-        required: true
-        type: string
-      distribution_id:
-        required: true
-        type: string
-      project_name:
-        required: true
-        type: string
-
-    secrets:
-      aws_access_key_id:
-        required: true
-      aws_secret_access_key:
-        requ]ired: true
 
 jobs:
   build:
     name: Pull Repository & Build
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.environment }}
+      name: ${{ vars.environment }}
     steps:
       - name: Checkout to the repository
         uses: actions/checkout@v2
+        run : echo ${{ vars.bucket }}
 
       - name: Set up NodeJS environment
         uses: actions/setup-node@v2
@@ -66,11 +39,11 @@ jobs:
         id: build-project
         run: npm run build
 
-      - name: Upload to bucket ${{ inputs.bucket }}
+      - name: Upload to bucket ${{ vars.bucket }}
         id: upload-files
-        # run: aws s3 cp build/ s3://prod${{ inputs.bucket }} --recursive
+        # run: aws s3 cp build/ s3://prod${{ vars.bucket }} --recursive
         run: echo ${{vars.PROJECT_NAME}}
 
       - name: Invalidate Cloudfront
         id: invalidate-cloudfront
-        run: aws cloudfront create-invalidation --distribution-id "${{ inputs.distribution_id }}"  --path "/*"
+        run: aws cloudfront create-invalidation --distribution-id "${{ vars.distribution_id }}"  --path "/*"
