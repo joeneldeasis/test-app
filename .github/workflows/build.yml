@@ -44,15 +44,15 @@ jobs:
       #   run: aws s3 cp build/ s3://prod-${{ vars.BUCKET_NAME }} --recursive
 
   deploy:
-    name: Initial build
+    name: deployment
     runs-on: ubuntu-latest
 
     steps:
 
       - name: Uploading build files
         run: |
-          aws s3 cp s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.event.pull_request.head.sha }}.zip .
-          unzip ${{ github.event.repository.name }}-${{ github.event.pull_request.head.sha }}.zip
+          aws s3 cp s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.sha }}.zip .
+          unzip ${{ github.event.repository.name }}-${{ github.sha }}.zip
           pwd
           ls -ltrh
 
