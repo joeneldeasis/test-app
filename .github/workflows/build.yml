@@ -14,7 +14,7 @@ on:
       branch:
         required: true
         type: string
-      bucket_name:
+      bucket:
         required: true
         type: string
       environment:
@@ -63,9 +63,9 @@ jobs:
         id: build-project
         run: npm run build
 
-      - name: Upload to bucket ${{ inputs.bucket_name }}
+      - name: Upload to bucket ${{ inputs.bucket }}
         id: upload-files
-        run: aws s3 cp build/ s3://prod_${{ inputs.bucket_name }} --recursive
+        run: aws s3 cp build/ s3://prod-${{ inputs.bucket }} --recursive
 
       - name: Invalidate Cloudfront
         id: invalidate-cloudfront
