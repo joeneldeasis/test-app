@@ -18,8 +18,6 @@ jobs:
 
       - name: Set up NodeJS environment
         uses: actions/setup-node@v2
-        with:
-          node-version-file: ".nvmrc"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
