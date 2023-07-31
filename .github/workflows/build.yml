@@ -34,13 +34,12 @@ jobs:
         # run: npm install
         run: echo $PROJECT_NAME
 
+      - name: SADAhlhlkjh
+        run: echo ${{ vars.BUCKET }}
+
       - name: Build Project
         id: build-project
         run: npm run build
-
-      - name: jhlhlkjh
-        id: asdads-2123
-        run: echo ${{ vars.bucket }}
 
       - name: Upload to bucket ${{ vars.bucket }}
         id: upload-files
