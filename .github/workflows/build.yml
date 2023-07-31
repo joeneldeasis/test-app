@@ -59,7 +59,8 @@ jobs:
 
       - name: Install Dependencies
         id: install-dependencies
-        run: npm install
+        # run: npm install
+        run: echo $PROJECT_NAME
 
       - name: Build Project
         id: build-project
@@ -68,7 +69,7 @@ jobs:
       - name: Upload to bucket ${{ inputs.bucket }}
         id: upload-files
         # run: aws s3 cp build/ s3://prod${{ inputs.bucket }} --recursive
-        run: echo ${{vars}}
+        run: echo ${{vars.PROJECT_NAME}}
 
       - name: Invalidate Cloudfront
         id: invalidate-cloudfront
