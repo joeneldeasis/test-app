@@ -38,7 +38,7 @@ jobs:
 
       - name: Compress Build Files
         id: compress-build
-        run: cd build && zip -r ${{ github.event.repository.name }}-${{GITHUB_SHA}}.zip *
+        run: cd build && zip -r ${{ github.event.repository.name }}-${{ github.event.pull_request.head.sha }}.zip *
 
       - name: Upload to bucket ${{ vars.BUCKET_NAME }}
         id: upload-files
