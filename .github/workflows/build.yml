@@ -71,7 +71,7 @@ jobs:
         ls -ltrh
 
     - name: Uploading files to bucket ${{ vars.BUCKET_NAME }}
-      run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/* s3://prod-${{ vars.BUCKET_NAME }} --recursive
+      run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/* s3://prod-${{ vars.BUCKET_NAME }}
 
     - name: Invalidate Cloudfront
       id: invalidate-cloudfront
