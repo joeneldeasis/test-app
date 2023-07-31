@@ -1,4 +1,4 @@
-name: ${{input.project_name}} Deployment in ${{input.environment}} environment
+name: Project Deployment
 
 on:
   push:
