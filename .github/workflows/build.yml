@@ -49,13 +49,20 @@ jobs:
     needs: setup
     steps:
 
-      - name: Uploading build files
-        run: |
-          aws s3 cp s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.sha }}.zip .
-          unzip ${{ github.event.repository.name }}-${{ github.sha }}.zip
-          pwd
-          ls -ltrh
+    - name: Configuring aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Invalidate Cloudfront
-        id: invalidate-cloudfront
-        run: aws cloudfront create-invalidation --distribution-id "${{ vars.DISTRIBUTION_ID }}"  --path "/*"
+    - name: Uploading build files
+      run: |
+        aws s3 cp s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.sha }}.zip .
+        unzip ${{ github.event.repository.name }}-${{ github.sha }}.zip
+        pwd
+        ls -ltrh
+
+    - name: Invalidate Cloudfront
+      id: invalidate-cloudfront
+      run: aws cloudfront create-invalidation --distribution-id "${{ vars.DISTRIBUTION_ID }}"  --path "/*"
