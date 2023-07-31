@@ -28,7 +28,7 @@ jobs:
 
       - name: Test echo
         run: ${{vars}}
-         
+        
       - name: Install Dependencies
         id: install-dependencies
         run: npm install
