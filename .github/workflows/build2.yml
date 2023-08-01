@@ -7,10 +7,6 @@ on:
         type: environment
         description: Select the environment   
 
-env:
-  if: inputs.environment == 'Production'
-  build-type: 'production'
-
 jobs:
   setup:
     name: Initial Build
@@ -64,11 +60,11 @@ jobs:
         unzip ${{ inputs.environment }}-${{ github.sha }}.zip -d ${{ github.event.repository.name }}-${{ github.sha }}
 
     - name: Uploading files to bucket prod-${{ vars.BUCKET_NAME }}
-      if: env.build-type == 'production'
+      if: inputs.environment == 'production'
       run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://prod-${{ vars.BUCKET_NAME }}
 
     - name: Uploading files to bucket stg-${{ vars.BUCKET_NAME }}
-      if: env.build-type != 'production'
+      if: inputs.environment == 'staging'
       run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://stg-${{ vars.BUCKET_NAME }}
 
     - name: Invalidate Cloudfront
