@@ -1,0 +1,91 @@
+name: Project Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+        description: Select the environment
+      choice:
+        type: choice
+        description: Make a choice
+        options:
+        - staging
+        - development
+        - production
+
+
+jobs:
+  setup:
+    name: Initial Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the repository
+        uses: actions/checkout@v2
+
+      - name: Setting up nodejs environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+
+      - name: Configuring aws credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Configuring aws credentials
+        if: inputs.target-env == 'Development'
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Installing dependencies
+        run: npm install
+
+      - name: Building project
+        run: npm run build
+
+      - name: Compressing build files
+        run: |
+          cd build && zip -r ../${{ github.event.repository.name }}-${{ github.sha }}.zip *
+
+      - name: Uploading build files
+        run: |
+          aws s3 cp ${{ github.event.repository.name }}-${{ github.sha }}.zip s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.sha }}.zip
+
+  deploy:
+    name: Project Deployment
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+
+    - name: Configuring aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Downloading build files
+      run: |
+        aws s3 cp s3://prod-${{ vars.BUCKET_NAME }}/builds/${{ github.event.repository.name }}-${{ github.sha }}.zip .
+        pwd
+        ls -ltrh
+    
+    - name: Unzipping build files
+      run: |
+        unzip ${{ github.event.repository.name }}-${{ github.sha }}.zip -d ${{ github.event.repository.name }}-${{ github.sha }}
+        pwd
+        ls -ltrh
+
+    - name: Uploading files to bucket ${{ vars.BUCKET_NAME }}
+      run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://prod-${{ vars.BUCKET_NAME }}
+
+    - name: Invalidate Cloudfront
+      id: invalidate-cloudfront
+      run: aws cloudfront create-invalidation --distribution-id "${{ vars.DISTRIBUTION_ID }}"  --path "/*"
