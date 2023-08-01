@@ -9,7 +9,7 @@ on:
 
 env:
   if: inputs.environment == 'Production'
-  build-type: true
+  build-type: 'production'
 
 jobs:
   setup:
@@ -64,11 +64,11 @@ jobs:
         unzip ${{ inputs.environment }}-${{ github.sha }}.zip -d ${{ github.event.repository.name }}-${{ github.sha }}
 
     - name: Uploading files to bucket prod-${{ vars.BUCKET_NAME }}
-      if: env.build-type == true
+      if: env.build-type == 'production'
       run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://prod-${{ vars.BUCKET_NAME }}
 
     - name: Uploading files to bucket stg-${{ vars.BUCKET_NAME }}
-      if: env.build-type != true
+      if: env.build-type != 'production'
       run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://stg-${{ vars.BUCKET_NAME }}
 
     - name: Invalidate Cloudfront
