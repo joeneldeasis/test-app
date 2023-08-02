@@ -1,15 +1,19 @@
 name: Project Deployment
 
 on:
+  push:
+    branches: [ main, staging ]
+  pull_request:
+    branches: [ main, staging ]
   workflow_dispatch:
-    inputs:
-      environment:
-        type: environment
-        description: Select the environment   
+    # inputs:
+    #   environment:
+    #     type: environment
+    #     description: Select the environment   
 
 jobs:
-  setup:
-    name: Initial Build
+  build-staging:
+    name: Build Staging
     runs-on: ubuntu-latest
 
     steps:
@@ -29,18 +33,48 @@ jobs:
       - name: Compressing artifact
         run: |
           cd build
-          zip -r ../${{ inputs.environment }}-${{ github.sha }}.zip *
+          zip -r ../stg-${{ github.sha }}.zip *
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.environment }}-${{ github.sha }}
-          path: ${{ inputs.environment }}-${{ github.sha }}.zip
+          name: stg-${{ github.sha }}
+          path: stg-${{ github.sha }}.zip
 
-  deploy:
-    name: Deployment
+  build-production:
+    name: Build Production
     runs-on: ubuntu-latest
-    needs: setup
+
+    steps:
+      - name: Checkout to the repository
+        uses: actions/checkout@v2
+
+      - name: Setting up nodejs environment
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+
+      - name: Install dependencies and build
+        run: |
+          npm install
+          npm run build --if-present
+
+      - name: Compressing artifact
+        run: |
+          cd build
+          zip -r ../prod-${{ github.sha }}.zip *
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v3
+        with:
+          name: prod-${{ github.sha }}
+          path: prod-${{ github.sha }}.zip
+
+  deploy-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    needs: [build-staging]
+    environment: 'Staging'
     steps:
 
     - name: Configuring aws credentials
@@ -60,11 +94,37 @@ jobs:
         unzip ${{ inputs.environment }}-${{ github.sha }}.zip -d ${{ github.event.repository.name }}-${{ github.sha }}
 
     - name: Uploading files to bucket prod-${{ vars.BUCKET_NAME }}
-      if: inputs.environment == 'production'
-      run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://prod-${{ vars.BUCKET_NAME }}
+      run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://stg-${{ vars.BUCKET_NAME }}
+
+    - name: Invalidate Cloudfront
+      id: invalidate-cloudfront
+      run: aws cloudfront create-invalidation --distribution-id "${{ vars.DISTRIBUTION_ID }}"  --path "/*"
+
+
+  deploy-production:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    needs: [build-production]
+    environment: 'Production'
+    steps:
+
+    - name: Configuring aws credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.AWS_REGION }}
+
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v3
+      with:
+        name: stg-${{ github.sha }}
+    
+    - name: Unzipping build files
+      run: |
+        unzip stg-${{ github.sha }}.zip -d ${{ github.event.repository.name }}-${{ github.sha }}
 
     - name: Uploading files to bucket stg-${{ vars.BUCKET_NAME }}
-      if: inputs.environment == 'staging'
       run: aws s3 sync ${{ github.event.repository.name }}-${{ github.sha }}/ s3://stg-${{ vars.BUCKET_NAME }}
 
     - name: Invalidate Cloudfront
